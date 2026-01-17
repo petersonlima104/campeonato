@@ -1,0 +1,8 @@
+{
+  "name": "Campeonato",
+  "short_name": "Campeonato",
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0d6efd",
+  "background_color": "#ffffff"
+}

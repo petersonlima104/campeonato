@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Campeonato</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Bootstrap -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json" />
+
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+
+  <body>
+    <!-- BOTÃO LOGIN -->
+    <div class="text-end p-2">
+      <button
+        class="btn btn-outline-primary"
+        data-bs-toggle="modal"
+        data-bs-target="#loginModal"
+      >
+        Área do Administrador
+      </button>
+    </div>
+
+    <!-- MODAL LOGIN -->
+    <div class="modal fade" id="loginModal">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Login ADM</h5>
+            <button class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input id="email" class="form-control mb-2" placeholder="Email" />
+            <input
+              id="password"
+              type="password"
+              class="form-control"
+              placeholder="Senha"
+            />
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-primary w-100" onclick="login()">
+              Entrar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container mt-3">
+      <ul class="nav nav-tabs">
+        <li class="nav-item">
+          <button
+            class="nav-link active"
+            data-bs-toggle="tab"
+            data-bs-target="#times"
+          >
+            Times
+          </button>
+        </li>
+        <li class="nav-item">
+          <button
+            class="nav-link"
+            data-bs-toggle="tab"
+            data-bs-target="#artilheiros"
+          >
+            Artilheiros
+          </button>
+        </li>
+        <li class="nav-item">
+          <button
+            class="nav-link"
+            data-bs-toggle="tab"
+            data-bs-target="#assistencias"
+          >
+            Assistências
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#jogos">
+            Jogos
+          </button>
+        </li>
+      </ul>
+
+      <div class="tab-content mt-3">
+        <!-- TIMES -->
+        <div class="tab-pane fade show active" id="times">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Time</th>
+                <th>P</th>
+                <th>V</th>
+                <th>SG</th>
+                <th>GP</th>
+                <th class="admin-only">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="listaTimes"></tbody>
+          </table>
+        </div>
+
+        <!-- ARTILHEIROS -->
+        <div class="tab-pane fade" id="artilheiros">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Jogador</th>
+                <th>Time</th>
+                <th>Gols</th>
+                <th class="admin-only">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="listaArtilheiros"></tbody>
+          </table>
+        </div>
+
+        <!-- ASSISTÊNCIAS -->
+        <div class="tab-pane fade" id="assistencias">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Jogador</th>
+                <th>Time</th>
+                <th>Assist.</th>
+                <th class="admin-only">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="listaAssistencias"></tbody>
+          </table>
+        </div>
+
+        <!-- JOGOS -->
+        <div class="tab-pane fade" id="jogos">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Hora</th>
+                <th>Mandante</th>
+                <th>Visitante</th>
+                <th>Placar</th>
+                <th class="admin-only">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="listaJogos"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JS -->
+    <script type="module" src="js/firebase.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/times.js"></script>
+    <script type="module" src="js/artilheiros.js"></script>
+    <script type="module" src="js/assistencias.js"></script>
+    <script type="module" src="js/jogos.js"></script>
+  </body>
+</html>

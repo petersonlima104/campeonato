@@ -1,0 +1,7 @@
+.admin-only {
+  display: none;
+}
+
+body.admin .admin-only {
+  display: table-cell;
+}
