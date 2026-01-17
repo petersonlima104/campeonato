@@ -4,6 +4,8 @@ import {
   onSnapshot,
   deleteDoc,
   doc,
+  addDoc,
+  updateDoc,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const lista = document.getElementById("listaJogos");
@@ -35,6 +37,35 @@ window.excluirJogo = async function (id) {
   await deleteDoc(doc(db, "jogos", id));
 };
 
-window.editarJogo = function (id) {
-  alert("Editar jogo " + id);
+window.editarJogo = async function (id) {
+  const placar = prompt("Novo placar (ex: 3x2):");
+  if (!placar) return;
+
+  await updateDoc(doc(db, "jogos", id), {
+    placar,
+  });
+};
+
+window.novoJogo = async function () {
+  const data = prompt("Data do jogo (ex: 10/02):");
+  if (!data) return;
+
+  const hora = prompt("Hora (ex: 19:30):");
+  if (!hora) return;
+
+  const mandante = prompt("Time mandante:");
+  if (!mandante) return;
+
+  const visitante = prompt("Time visitante:");
+  if (!visitante) return;
+
+  const placar = prompt("Placar (ex: 2x1):") || "-";
+
+  await addDoc(collection(db, "jogos"), {
+    data,
+    hora,
+    mandante,
+    visitante,
+    placar,
+  });
 };

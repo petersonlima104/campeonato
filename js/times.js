@@ -4,6 +4,8 @@ import {
   onSnapshot,
   deleteDoc,
   doc,
+  addDoc,
+  updateDoc,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const lista = document.getElementById("listaTimes");
@@ -48,6 +50,29 @@ window.excluirTime = async function (id) {
   await deleteDoc(doc(db, "times", id));
 };
 
-window.editarTime = function (id) {
-  alert("Abrir modal para editar o time: " + id);
+window.editarTime = async function (id) {
+  const pontos = Number(prompt("Pontos:"));
+  const vitorias = Number(prompt("Vitórias:"));
+  const saldo = Number(prompt("Saldo de gols:"));
+  const gols = Number(prompt("Gols feitos:"));
+
+  await updateDoc(doc(db, "times", id), {
+    pontos,
+    vitorias,
+    saldo,
+    gols,
+  });
+};
+
+window.novoTime = async function () {
+  const nome = prompt("Nome do time:");
+  if (!nome) return;
+
+  await addDoc(collection(db, "times"), {
+    nome,
+    pontos: 0,
+    vitorias: 0,
+    saldo: 0,
+    gols: 0,
+  });
 };

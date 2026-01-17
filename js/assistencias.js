@@ -4,6 +4,8 @@ import {
   onSnapshot,
   deleteDoc,
   doc,
+  addDoc,
+  updateDoc,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const lista = document.getElementById("listaAssistencias");
@@ -36,6 +38,27 @@ window.excluirAssistencia = async function (id) {
   await deleteDoc(doc(db, "assistencias", id));
 };
 
-window.editarAssistencia = function (id) {
-  alert("Editar assistência " + id);
+window.editarAssistencia = async function (id) {
+  const assistencias = Number(prompt("Novo número de assistências:"));
+  if (isNaN(assistencias)) return;
+
+  await updateDoc(doc(db, "assistencias", id), {
+    assistencias,
+  });
+};
+
+window.novaAssistencia = async function () {
+  const nome = prompt("Nome do jogador:");
+  if (!nome) return;
+
+  const time = prompt("Time:");
+  if (!time) return;
+
+  const assistencias = Number(prompt("Número de assistências:")) || 0;
+
+  await addDoc(collection(db, "assistencias"), {
+    nome,
+    time,
+    assistencias,
+  });
 };

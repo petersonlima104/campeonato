@@ -4,6 +4,8 @@ import {
   onSnapshot,
   deleteDoc,
   doc,
+  addDoc,
+  updateDoc,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const lista = document.getElementById("listaArtilheiros");
@@ -36,6 +38,27 @@ window.excluirArtilheiro = async function (id) {
   await deleteDoc(doc(db, "artilheiros", id));
 };
 
-window.editarArtilheiro = function (id) {
-  alert("Editar artilheiro " + id);
+window.editarArtilheiro = async function (id) {
+  const gols = Number(prompt("Nova quantidade de gols:"));
+  if (isNaN(gols)) return;
+
+  await updateDoc(doc(db, "artilheiros", id), {
+    gols,
+  });
+};
+
+window.novoArtilheiro = async function () {
+  const nome = prompt("Nome do jogador:");
+  if (!nome) return;
+
+  const time = prompt("Time:");
+  if (!time) return;
+
+  const gols = Number(prompt("Quantidade de gols:")) || 0;
+
+  await addDoc(collection(db, "artilheiros"), {
+    nome,
+    time,
+    gols,
+  });
 };

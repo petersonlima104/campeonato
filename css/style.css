@@ -3,12 +3,14 @@
   display: none;
 }
 
-/* Mostra ações quando logado como ADM */
-body.admin .admin-only {
+/* Mostra células da tabela para ADM */
+body.admin td.admin-only,
+body.admin th.admin-only {
   display: table-cell;
 }
 
-/* Para botões */
-body.admin button.admin-only {
+/* Mostra botões para ADM */
+body.admin .admin-only button {
   display: inline-block;
+  pointer-events: auto;
 }

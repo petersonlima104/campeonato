@@ -14,6 +14,10 @@ window.login = function () {
     .then(() => {
       alert("Login realizado com sucesso");
       location.reload();
+
+      document.querySelectorAll(".admin-only").forEach((el) => {
+        el.style.display = "table-cell";
+      });
     })
     .catch((err) => {
       alert("Erro no login");
