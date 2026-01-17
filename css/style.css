@@ -1,7 +1,14 @@
+/* Esconde ações para usuários comuns */
 .admin-only {
   display: none;
 }
 
+/* Mostra ações quando logado como ADM */
 body.admin .admin-only {
   display: table-cell;
+}
+
+/* Para botões */
+body.admin button.admin-only {
+  display: inline-block;
 }
