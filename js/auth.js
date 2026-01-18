@@ -18,8 +18,6 @@ window.login = async function () {
       document.getElementById("loginModal"),
     );
     modal.hide();
-
-    alert("Login realizado");
   } catch (e) {
     alert("Erro no login");
     console.error(e);
