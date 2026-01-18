@@ -16,30 +16,35 @@ onSnapshot(collection(db, "times"), (snap) => {
     ...d.data(),
   }));
 
+  // 🔥 CRITÉRIOS DE CLASSIFICAÇÃO
   dados.sort(
     (a, b) =>
       b.pontos - a.pontos ||
       b.vitorias - a.vitorias ||
       b.saldo - a.saldo ||
-      b.gols - a.gols,
+      b.golsMarcados - a.golsMarcados,
   );
 
   lista.innerHTML = dados
     .map(
       (t, i) => `
-    <tr>
-      <td>${i + 1}</td>
-      <td>${t.nome}</td>
-      <td>${t.pontos}</td>
-      <td>${t.vitorias}</td>
-      <td>${t.saldo}</td>
-      <td>${t.gols}</td>
-      <td class="admin-only">
-        <button class="btn btn-sm btn-warning me-1" onclick="editarTime('${t.id}')">✏️</button>
-        <button class="btn btn-sm btn-danger" onclick="excluirTime('${t.id}')">🗑️</button>
-      </td>
-    </tr>
-  `,
+      <tr>
+        <td>${i + 1}</td>
+        <td>${t.nome}</td>
+        <td>${t.pontos}</td>
+        <td>${t.partidas}</td>
+        <td>${t.vitorias}</td>
+        <td>${t.empates}</td>
+        <td>${t.derrotas}</td>
+        <td>${t.golsMarcados}</td>
+        <td>${t.golsSofridos}</td>
+        <td>${t.saldo}</td>
+        <td class="admin-only">
+          <button class="btn btn-sm btn-warning me-1" onclick="editarTime('${t.id}')">✏️</button>
+          <button class="btn btn-sm btn-danger" onclick="excluirTime('${t.id}')">🗑️</button>
+        </td>
+      </tr>
+    `,
     )
     .join("");
 
@@ -47,22 +52,32 @@ onSnapshot(collection(db, "times"), (snap) => {
 });
 
 // ===== FUNÇÕES ADMIN =====
+
 window.excluirTime = async function (id) {
   if (!confirm("Deseja excluir este time?")) return;
   await deleteDoc(doc(db, "times", id));
 };
 
 window.editarTime = async function (id) {
-  const pontos = Number(prompt("Pontos:"));
-  const vitorias = Number(prompt("Vitórias:"));
-  const saldo = Number(prompt("Saldo de gols:"));
-  const gols = Number(prompt("Gols feitos:"));
+  const pontos = Number(prompt("Pontos (P):"));
+  const partidas = Number(prompt("Partidas Jogadas (PJ):"));
+  const vitorias = Number(prompt("Vitórias (VIT):"));
+  const empates = Number(prompt("Empates (E):"));
+  const derrotas = Number(prompt("Derrotas (DER):"));
+  const golsMarcados = Number(prompt("Gols Marcados (GM):"));
+  const golsSofridos = Number(prompt("Gols Sofridos (GC):"));
+
+  const saldo = golsMarcados - golsSofridos;
 
   await updateDoc(doc(db, "times", id), {
     pontos,
+    partidas,
     vitorias,
+    empates,
+    derrotas,
+    golsMarcados,
+    golsSofridos,
     saldo,
-    gols,
   });
 };
 
@@ -73,8 +88,12 @@ window.novoTime = async function () {
   await addDoc(collection(db, "times"), {
     nome,
     pontos: 0,
+    partidas: 0,
     vitorias: 0,
+    empates: 0,
+    derrotas: 0,
+    golsMarcados: 0,
+    golsSofridos: 0,
     saldo: 0,
-    gols: 0,
   });
 };
