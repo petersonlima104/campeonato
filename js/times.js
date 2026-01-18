@@ -40,7 +40,6 @@ onSnapshot(collection(db, "times"), (snap) => {
         <td>${t.golsSofridos}</td>
         <td>${t.saldo}</td>
         <td class="admin-only">
-          <button class="btn btn-sm btn-warning me-1" onclick="editarTime('${t.id}')">✏️</button>
           <button class="btn btn-sm btn-danger" onclick="excluirTime('${t.id}')">🗑️</button>
         </td>
       </tr>
@@ -56,29 +55,6 @@ onSnapshot(collection(db, "times"), (snap) => {
 window.excluirTime = async function (id) {
   if (!confirm("Deseja excluir este time?")) return;
   await deleteDoc(doc(db, "times", id));
-};
-
-window.editarTime = async function (id) {
-  const pontos = Number(prompt("Pontos (P):"));
-  const partidas = Number(prompt("Partidas Jogadas (PJ):"));
-  const vitorias = Number(prompt("Vitórias (VIT):"));
-  const empates = Number(prompt("Empates (E):"));
-  const derrotas = Number(prompt("Derrotas (DER):"));
-  const golsMarcados = Number(prompt("Gols Marcados (GM):"));
-  const golsSofridos = Number(prompt("Gols Sofridos (GC):"));
-
-  const saldo = golsMarcados - golsSofridos;
-
-  await updateDoc(doc(db, "times", id), {
-    pontos,
-    partidas,
-    vitorias,
-    empates,
-    derrotas,
-    golsMarcados,
-    golsSofridos,
-    saldo,
-  });
 };
 
 window.novoTime = async function () {
