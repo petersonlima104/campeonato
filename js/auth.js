@@ -12,6 +12,13 @@ window.login = async function () {
 
   try {
     await signInWithEmailAndPassword(auth, email, password);
+
+    // FECHA O MODAL
+    const modal = bootstrap.Modal.getInstance(
+      document.getElementById("loginModal"),
+    );
+    modal.hide();
+
     alert("Login realizado");
   } catch (e) {
     alert("Erro no login");
@@ -20,7 +27,12 @@ window.login = async function () {
 };
 
 onAuthStateChanged(auth, (user) => {
-  document.querySelectorAll(".admin-only").forEach((el) => {
-    el.style.display = user ? "inline-block" : "none";
-  });
+  window.isAdmin = !!user;
+  atualizarAdminUI(window.isAdmin);
 });
+
+window.atualizarAdminUI = function (isAdmin) {
+  document.querySelectorAll(".admin-only").forEach((el) => {
+    el.style.display = isAdmin ? "inline-block" : "none";
+  });
+};

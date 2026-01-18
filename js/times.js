@@ -42,6 +42,8 @@ onSnapshot(collection(db, "times"), (snap) => {
   `,
     )
     .join("");
+
+  if (window.isAdmin) atualizarAdminUI(true);
 });
 
 // ===== FUNÇÕES ADMIN =====

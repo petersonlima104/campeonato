@@ -30,6 +30,8 @@ onSnapshot(collection(db, "jogos"), (snap) => {
   `,
     )
     .join("");
+
+  if (window.isAdmin) atualizarAdminUI(true);
 });
 
 window.excluirJogo = async function (id) {

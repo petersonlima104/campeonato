@@ -31,6 +31,8 @@ onSnapshot(collection(db, "artilheiros"), (snap) => {
   `,
     )
     .join("");
+
+  if (window.isAdmin) atualizarAdminUI(true);
 });
 
 window.excluirArtilheiro = async function (id) {

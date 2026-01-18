@@ -31,6 +31,8 @@ onSnapshot(collection(db, "assistencias"), (snap) => {
   `,
     )
     .join("");
+
+  if (window.isAdmin) atualizarAdminUI(true);
 });
 
 window.excluirAssistencia = async function (id) {
