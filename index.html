@@ -280,7 +280,7 @@
         Todos os direitos reservados.<br />
         Desenvolvido por
         <a
-          href="https://www.softnet.com.br"
+          href="https://softnetsystems.wuaze.com/?i=1"
           target="_blank"
           class="footer-link"
         >
@@ -292,6 +292,15 @@
     <script>
       document.getElementById("anoAtual").textContent =
         new Date().getFullYear();
+    </script>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("./service-worker.js")
+          .then(() => console.log("Service Worker registrado"))
+          .catch((err) => console.error("Erro no SW:", err));
+      }
     </script>
   </body>
 </html>
