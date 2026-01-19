@@ -57,3 +57,10 @@ body.admin .admin-only button {
   border-radius: 8px;
   border: 1px solid #ddd;
 }
+
+@media (max-width: 576px) {
+  .patrocinio-img {
+    max-width: 90px;
+    max-height: 50px;
+  }
+}
