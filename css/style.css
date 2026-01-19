@@ -14,3 +14,46 @@ body.admin .admin-only button {
   display: inline-block;
   pointer-events: auto;
 }
+
+/* PATROCÍNIOS */
+.patrocinio-box {
+  background: #fff;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #999;
+  transition: 0.3s;
+}
+
+.patrocinio-box:hover {
+  border-color: #0d6efd;
+  color: #0d6efd;
+}
+
+/* FOOTER */
+.footer-link {
+  color: #0d6efd;
+  text-decoration: none;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
+}
+
+.patrocinio-img {
+  width: 100%;
+  max-width: 150px; /* 🔴 TAMANHO MÁXIMO */
+  max-height: 90px; /* 🔴 ALTURA MÁXIMA */
+  height: auto;
+
+  object-fit: contain;
+  padding: 8px;
+  background: #fff;
+
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}

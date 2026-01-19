@@ -194,6 +194,61 @@
     <!-- Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- MODAL JOGO -->
+    <div class="modal fade" id="jogoModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="jogoModalTitulo">Novo Jogo</h5>
+            <button class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            <input type="hidden" id="jogoId" />
+
+            <div class="mb-2">
+              <label>Data</label>
+              <input id="jogoData" class="form-control" placeholder="dd/mm" />
+            </div>
+
+            <div class="mb-2">
+              <label>Hora</label>
+              <input id="jogoHora" class="form-control" placeholder="hh:mm" />
+            </div>
+
+            <div class="mb-2">
+              <label>Mandante</label>
+              <select id="jogoMandante" class="form-select"></select>
+            </div>
+
+            <div class="mb-2">
+              <label>Visitante</label>
+              <select id="jogoVisitante" class="form-select"></select>
+            </div>
+
+            <div class="mb-2">
+              <label>Gols Mandante</label>
+              <input id="golsMandante" type="number" class="form-control" />
+            </div>
+
+            <div class="mb-2">
+              <label>Gols Visitante</label>
+              <input id="golsVisitante" type="number" class="form-control" />
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">
+              Cancelar
+            </button>
+            <button class="btn btn-primary" onclick="salvarJogo()">
+              Salvar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- JS -->
     <script type="module" src="js/firebase.js"></script>
     <script type="module" src="js/auth.js"></script>
@@ -201,5 +256,42 @@
     <script type="module" src="js/artilheiros.js"></script>
     <script type="module" src="js/assistencias.js"></script>
     <script type="module" src="js/jogos.js"></script>
+
+    <!-- PATROCINADORES -->
+    <section class="bg-light py-4 mt-5">
+      <div class="container text-center">
+        <h6 class="text-uppercase fw-bold mb-3">Coloque sua marca aqui</h6>
+
+        <div class="row justify-content-center g-3">
+          <div class="col-4 col-md-2">
+            <img
+              src="img/Softnet.png"
+              alt="Patrocinador 1"
+              class="patrocinio-img"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="bg-dark text-light py-3">
+      <div class="container text-center small">
+        © <span id="anoAtual"></span> <strong>Nome do Campeonato</strong> —
+        Todos os direitos reservados.<br />
+        Desenvolvido por
+        <a
+          href="https://www.softnet.com.br"
+          target="_blank"
+          class="footer-link"
+        >
+          SoftNet
+        </a>
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById("anoAtual").textContent =
+        new Date().getFullYear();
+    </script>
   </body>
 </html>

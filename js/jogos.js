@@ -6,9 +6,41 @@ import {
   deleteDoc,
   doc,
   updateDoc,
+  getDocs,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import { recalcularClassificacao } from "./classificacao.js";
+
+let listaTimes = [];
+let jogoModal;
+
+document.addEventListener("DOMContentLoaded", () => {
+  jogoModal = new bootstrap.Modal(document.getElementById("jogoModal"));
+  carregarTimesNoSelect();
+});
+
+async function carregarTimesNoSelect() {
+  const snap = await getDocs(collection(db, "times"));
+  listaTimes = snap.docs.map((d) => d.data().nome);
+
+  const mandante = document.getElementById("jogoMandante");
+  const visitante = document.getElementById("jogoVisitante");
+
+  mandante.innerHTML = "";
+  visitante.innerHTML = "";
+
+  listaTimes.forEach((t) => {
+    mandante.innerHTML += `<option value="${t}">${t}</option>`;
+    visitante.innerHTML += `<option value="${t}">${t}</option>`;
+  });
+}
+
+async function carregarTimes() {
+  const snap = await getDocs(collection(db, "times"));
+  listaTimes = snap.docs.map((d) => d.data().nome);
+}
+
+carregarTimes();
 
 const lista = document.getElementById("listaJogos");
 
@@ -38,17 +70,35 @@ onSnapshot(collection(db, "jogos"), (snap) => {
 });
 
 // ===== FUNÇÕES ADMIN =====
-window.novoJogo = async function () {
-  const data = prompt("Data (dd/mm):");
-  const hora = prompt("Hora (hh:mm):");
-  const mandante = prompt("Time mandante:");
-  const visitante = prompt("Time visitante:");
-  const golsMandante = Number(prompt("Gols do mandante:"));
-  const golsVisitante = Number(prompt("Gols do visitante:"));
 
-  if (!mandante || !visitante) return;
+window.novoJogo = function () {
+  document.getElementById("jogoModalTitulo").innerText = "Adicionar Jogo";
+  document.getElementById("jogoId").value = "";
 
-  await addDoc(collection(db, "jogos"), {
+  document.getElementById("jogoData").value = "";
+  document.getElementById("jogoHora").value = "";
+  document.getElementById("golsMandante").value = "";
+  document.getElementById("golsVisitante").value = "";
+
+  jogoModal.show();
+};
+
+window.salvarJogo = async function () {
+  const id = document.getElementById("jogoId").value;
+
+  const data = document.getElementById("jogoData").value;
+  const hora = document.getElementById("jogoHora").value;
+  const mandante = document.getElementById("jogoMandante").value;
+  const visitante = document.getElementById("jogoVisitante").value;
+  const golsMandante = Number(document.getElementById("golsMandante").value);
+  const golsVisitante = Number(document.getElementById("golsVisitante").value);
+
+  if (mandante === visitante) {
+    alert("Mandante e visitante não podem ser iguais");
+    return;
+  }
+
+  const dados = {
     data,
     hora,
     mandante,
@@ -56,8 +106,15 @@ window.novoJogo = async function () {
     golsMandante,
     golsVisitante,
     finalizado: true,
-  });
+  };
 
+  if (id) {
+    await updateDoc(doc(db, "jogos", id), dados);
+  } else {
+    await addDoc(collection(db, "jogos"), dados);
+  }
+
+  jogoModal.hide();
   await recalcularClassificacao();
 };
 
