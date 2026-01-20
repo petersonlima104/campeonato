@@ -67,6 +67,8 @@ onSnapshot(collection(db, "jogos"), (snap) => {
   `,
     )
     .join("");
+
+  if (window.isAdmin) atualizarAdminUI(true);
 });
 
 // ===== FUNÇÕES ADMIN =====

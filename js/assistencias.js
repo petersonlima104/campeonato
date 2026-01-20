@@ -15,6 +15,8 @@ let modalAssistencia = new bootstrap.Modal(
   document.getElementById("modalAssistencia"),
 );
 
+let assistenciasCache = [];
+
 async function carregarTimesNoSelect(selectId) {
   const select = document.getElementById(selectId);
   select.innerHTML = "";
@@ -29,21 +31,28 @@ async function carregarTimesNoSelect(selectId) {
 }
 
 onSnapshot(collection(db, "assistencias"), (snap) => {
-  const dados = snap.docs
-    .map((d) => ({ id: d.id, ...d.data() }))
-    .sort((a, b) => b.assistencias - a.assistencias);
+  assistenciasCache = snap.docs.map((d) => ({
+    id: d.id,
+    ...d.data(),
+  }));
 
-  lista.innerHTML = dados
+  renderAssistencias(assistenciasCache);
+});
+
+function renderAssistencias(lista) {
+  const tbody = document.getElementById("listaAssistencias");
+
+  tbody.innerHTML = lista
     .map(
-      (p, i) => `
+      (a, i) => `
     <tr>
       <td>${i + 1}</td>
-      <td>${p.nome}</td>
-      <td>${p.time}</td>
-      <td>${p.assistencias}</td>
+      <td>${a.nome}</td>
+      <td>${a.time}</td>
+      <td>${a.assistencias}</td>
       <td class="admin-only">
-        <button class="btn btn-sm btn-warning me-1" onclick="editarAssistencia('${p.id}')">✏️</button>
-        <button class="btn btn-sm btn-danger" onclick="excluirAssistencia('${p.id}')">🗑️</button>
+        <button class="btn btn-sm btn-warning" onclick="editarAssistencia('${a.id}')">✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="excluirAssistencia('${a.id}')">🗑️</button>
       </td>
     </tr>
   `,
@@ -51,7 +60,26 @@ onSnapshot(collection(db, "assistencias"), (snap) => {
     .join("");
 
   if (window.isAdmin) atualizarAdminUI(true);
-});
+}
+
+window.filtrarAssistencias = function () {
+  const termo = document
+    .getElementById("filtroAssistencia")
+    .value.toLowerCase();
+
+  if (!termo) {
+    renderAssistencias(assistenciasCache);
+    return;
+  }
+
+  const filtrados = assistenciasCache.filter(
+    (a) =>
+      a.nome.toLowerCase().includes(termo) ||
+      a.time.toLowerCase().includes(termo),
+  );
+
+  renderAssistencias(filtrados);
+};
 
 window.excluirAssistencia = async function (id) {
   if (!confirm("Excluir assistência?")) return;

@@ -121,6 +121,13 @@
 
         <!-- ARTILHEIROS -->
         <div class="tab-pane fade" id="artilheiros">
+          <input
+            type="text"
+            id="filtroArtilheiro"
+            class="form-control mb-2"
+            placeholder="🔍 Buscar jogador ou time..."
+            oninput="filtrarArtilheiros()"
+          />
           <!-- BOTÃO ADICIONAR ARTILHEIRO -->
           <button
             class="btn btn-success mb-2 admin-only"
@@ -145,6 +152,14 @@
 
         <!-- ASSISTÊNCIAS -->
         <div class="tab-pane fade" id="assistencias">
+          <input
+            type="text"
+            id="filtroAssistencia"
+            class="form-control mb-2"
+            placeholder="🔍 Buscar jogador ou time..."
+            oninput="filtrarAssistencias()"
+          />
+
           <!-- BOTÃO ADICIONAR ASSISTENCIA -->
           <button
             class="btn btn-success mb-2 admin-only"

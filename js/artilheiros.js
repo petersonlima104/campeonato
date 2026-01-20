@@ -15,6 +15,8 @@ let modalArtilheiro = new bootstrap.Modal(
   document.getElementById("modalArtilheiro"),
 );
 
+let artilheirosCache = [];
+
 async function carregarTimesNoSelect(selectId) {
   const select = document.getElementById(selectId);
   select.innerHTML = "";
@@ -29,21 +31,28 @@ async function carregarTimesNoSelect(selectId) {
 }
 
 onSnapshot(collection(db, "artilheiros"), (snap) => {
-  const dados = snap.docs
-    .map((d) => ({ id: d.id, ...d.data() }))
-    .sort((a, b) => b.gols - a.gols);
+  artilheirosCache = snap.docs.map((d) => ({
+    id: d.id,
+    ...d.data(),
+  }));
 
-  lista.innerHTML = dados
+  renderArtilheiros(artilheirosCache);
+});
+
+function renderArtilheiros(lista) {
+  const tbody = document.getElementById("listaArtilheiros");
+
+  tbody.innerHTML = lista
     .map(
-      (p, i) => `
+      (a, i) => `
     <tr>
       <td>${i + 1}</td>
-      <td>${p.nome}</td>
-      <td>${p.time}</td>
-      <td>${p.gols}</td>
+      <td>${a.nome}</td>
+      <td>${a.time}</td>
+      <td>${a.gols}</td>
       <td class="admin-only">
-        <button class="btn btn-sm btn-warning me-1" onclick="editarArtilheiro('${p.id}')">✏️</button>
-        <button class="btn btn-sm btn-danger" onclick="excluirArtilheiro('${p.id}')">🗑️</button>
+        <button class="btn btn-sm btn-warning" onclick="editarArtilheiro('${a.id}')">✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="excluirArtilheiro('${a.id}')">🗑️</button>
       </td>
     </tr>
   `,
@@ -51,7 +60,24 @@ onSnapshot(collection(db, "artilheiros"), (snap) => {
     .join("");
 
   if (window.isAdmin) atualizarAdminUI(true);
-});
+}
+
+window.filtrarArtilheiros = function () {
+  const termo = document.getElementById("filtroArtilheiro").value.toLowerCase();
+
+  if (!termo) {
+    renderArtilheiros(artilheirosCache);
+    return;
+  }
+
+  const filtrados = artilheirosCache.filter(
+    (a) =>
+      a.nome.toLowerCase().includes(termo) ||
+      a.time.toLowerCase().includes(termo),
+  );
+
+  renderArtilheiros(filtrados);
+};
 
 window.excluirArtilheiro = async function (id) {
   if (!confirm("Excluir artilheiro?")) return;
