@@ -46,8 +46,8 @@ body.admin .admin-only button {
 
 .patrocinio-img {
   width: 100%;
-  max-width: 150px; /* 🔴 TAMANHO MÁXIMO */
-  max-height: 90px; /* 🔴 ALTURA MÁXIMA */
+  max-width: 170px; /* 🔴 TAMANHO MÁXIMO */
+  max-height: 110px; /* 🔴 ALTURA MÁXIMA */
   height: auto;
 
   object-fit: contain;
@@ -60,7 +60,7 @@ body.admin .admin-only button {
 
 @media (max-width: 576px) {
   .patrocinio-img {
-    max-width: 90px;
-    max-height: 50px;
+    max-width: 110px;
+    max-height: 70px;
   }
 }

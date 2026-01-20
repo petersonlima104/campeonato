@@ -1,4 +1,4 @@
-const CACHE_NAME = "campeonato-v1";
+const CACHE_NAME = "campeonato-v2";
 
 const FILES_TO_CACHE = [
   "/",

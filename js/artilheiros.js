@@ -6,9 +6,27 @@ import {
   doc,
   addDoc,
   updateDoc,
+  getDocs,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const lista = document.getElementById("listaArtilheiros");
+
+let modalArtilheiro = new bootstrap.Modal(
+  document.getElementById("modalArtilheiro"),
+);
+
+async function carregarTimesNoSelect(selectId) {
+  const select = document.getElementById(selectId);
+  select.innerHTML = "";
+
+  const snap = await getDocs(collection(db, "times"));
+  snap.forEach((doc) => {
+    const opt = document.createElement("option");
+    opt.value = doc.data().nome;
+    opt.textContent = doc.data().nome;
+    select.appendChild(opt);
+  });
+}
 
 onSnapshot(collection(db, "artilheiros"), (snap) => {
   const dados = snap.docs
@@ -41,26 +59,44 @@ window.excluirArtilheiro = async function (id) {
 };
 
 window.editarArtilheiro = async function (id) {
-  const gols = Number(prompt("Nova quantidade de gols:"));
-  if (isNaN(gols)) return;
+  const linha = document
+    .querySelector(`[onclick="editarArtilheiro('${id}')"]`)
+    .closest("tr").children;
 
-  await updateDoc(doc(db, "artilheiros", id), {
-    gols,
-  });
+  document.getElementById("artilheiroId").value = id;
+  document.getElementById("artilheiroNome").value = linha[1].innerText;
+  document.getElementById("artilheiroGols").value = linha[3].innerText;
+
+  await carregarTimesNoSelect("artilheiroTime");
+  document.getElementById("artilheiroTime").value = linha[2].innerText;
+
+  modalArtilheiro.show();
 };
 
 window.novoArtilheiro = async function () {
-  const nome = prompt("Nome do jogador:");
-  if (!nome) return;
+  document.getElementById("artilheiroId").value = "";
+  document.getElementById("artilheiroNome").value = "";
+  document.getElementById("artilheiroGols").value = "";
 
-  const time = prompt("Time:");
-  if (!time) return;
+  await carregarTimesNoSelect("artilheiroTime");
 
-  const gols = Number(prompt("Quantidade de gols:")) || 0;
+  modalArtilheiro.show();
+};
 
-  await addDoc(collection(db, "artilheiros"), {
-    nome,
-    time,
-    gols,
-  });
+window.salvarArtilheiro = async function () {
+  const id = document.getElementById("artilheiroId").value;
+
+  const nome = document.getElementById("artilheiroNome").value;
+  const time = document.getElementById("artilheiroTime").value;
+  const gols = Number(document.getElementById("artilheiroGols").value);
+
+  if (!nome || !time) return alert("Preencha todos os campos");
+
+  if (id) {
+    await updateDoc(doc(db, "artilheiros", id), { nome, time, gols });
+  } else {
+    await addDoc(collection(db, "artilheiros"), { nome, time, gols });
+  }
+
+  modalArtilheiro.hide();
 };

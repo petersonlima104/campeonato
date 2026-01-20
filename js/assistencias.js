@@ -6,9 +6,27 @@ import {
   doc,
   addDoc,
   updateDoc,
+  getDocs,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const lista = document.getElementById("listaAssistencias");
+
+let modalAssistencia = new bootstrap.Modal(
+  document.getElementById("modalAssistencia"),
+);
+
+async function carregarTimesNoSelect(selectId) {
+  const select = document.getElementById(selectId);
+  select.innerHTML = "";
+
+  const snap = await getDocs(collection(db, "times"));
+  snap.forEach((doc) => {
+    const opt = document.createElement("option");
+    opt.value = doc.data().nome;
+    opt.textContent = doc.data().nome;
+    select.appendChild(opt);
+  });
+}
 
 onSnapshot(collection(db, "assistencias"), (snap) => {
   const dados = snap.docs
@@ -41,26 +59,54 @@ window.excluirAssistencia = async function (id) {
 };
 
 window.editarAssistencia = async function (id) {
-  const assistencias = Number(prompt("Novo número de assistências:"));
-  if (isNaN(assistencias)) return;
+  const linha = document
+    .querySelector(`[onclick="editarAssistencia('${id}')"]`)
+    .closest("tr").children;
 
-  await updateDoc(doc(db, "assistencias", id), {
-    assistencias,
-  });
+  document.getElementById("assistenciaId").value = id;
+  document.getElementById("assistenciaNome").value = linha[1].innerText;
+  document.getElementById("assistenciaQtd").value = linha[3].innerText;
+
+  await carregarTimesNoSelect("assistenciaTime");
+  document.getElementById("assistenciaTime").value = linha[2].innerText;
+
+  new bootstrap.Modal(document.getElementById("modalAssistencia")).show();
 };
 
 window.novaAssistencia = async function () {
-  const nome = prompt("Nome do jogador:");
-  if (!nome) return;
+  document.getElementById("assistenciaId").value = "";
+  document.getElementById("assistenciaNome").value = "";
+  document.getElementById("assistenciaQtd").value = "";
 
-  const time = prompt("Time:");
-  if (!time) return;
+  await carregarTimesNoSelect("assistenciaTime");
 
-  const assistencias = Number(prompt("Número de assistências:")) || 0;
+  new bootstrap.Modal(document.getElementById("modalAssistencia")).show();
+};
 
-  await addDoc(collection(db, "assistencias"), {
-    nome,
-    time,
-    assistencias,
-  });
+window.salvarAssistencia = async function () {
+  const id = document.getElementById("assistenciaId").value;
+
+  const nome = document.getElementById("assistenciaNome").value;
+  const time = document.getElementById("assistenciaTime").value;
+  const assistencias = Number(document.getElementById("assistenciaQtd").value);
+
+  if (!nome || !time) return alert("Preencha todos os campos");
+
+  if (id) {
+    await updateDoc(doc(db, "assistencias", id), {
+      nome,
+      time,
+      assistencias,
+    });
+  } else {
+    await addDoc(collection(db, "assistencias"), {
+      nome,
+      time,
+      assistencias,
+    });
+  }
+
+  bootstrap.Modal.getInstance(
+    document.getElementById("modalAssistencia"),
+  ).hide();
 };
