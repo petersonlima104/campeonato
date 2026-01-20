@@ -36,6 +36,9 @@ onSnapshot(collection(db, "assistencias"), (snap) => {
     ...d.data(),
   }));
 
+  // ORDENA POR ASSISTÊNCIAS
+  assistenciasCache.sort((a, b) => b.assistencias - a.assistencias);
+
   renderAssistencias(assistenciasCache);
 });
 
@@ -77,6 +80,9 @@ window.filtrarAssistencias = function () {
       a.nome.toLowerCase().includes(termo) ||
       a.time.toLowerCase().includes(termo),
   );
+
+  // ORDENA POR ASSISTÊNCIAS
+  assistenciasCache.sort((a, b) => b.assistencias - a.assistencias);
 
   renderAssistencias(filtrados);
 };

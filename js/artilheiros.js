@@ -36,6 +36,9 @@ onSnapshot(collection(db, "artilheiros"), (snap) => {
     ...d.data(),
   }));
 
+  // ORDENA POR GOLS (maior primeiro)
+  artilheirosCache.sort((a, b) => b.gols - a.gols);
+
   renderArtilheiros(artilheirosCache);
 });
 
@@ -75,6 +78,9 @@ window.filtrarArtilheiros = function () {
       a.nome.toLowerCase().includes(termo) ||
       a.time.toLowerCase().includes(termo),
   );
+
+  // GARANTE A ORDEM MESMO APÓS FILTRAR
+  artilheirosCache.sort((a, b) => b.gols - a.gols);
 
   renderArtilheiros(filtrados);
 };
