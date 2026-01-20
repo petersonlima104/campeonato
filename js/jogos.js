@@ -14,6 +14,12 @@ import { recalcularClassificacao } from "./classificacao.js";
 let listaTimes = [];
 let jogoModal;
 
+function dataParaDate(dataBR) {
+  if (!dataBR) return new Date(0); // segurança
+  const [dia, mes, ano] = dataBR.split("/");
+  return new Date(`${ano}-${mes}-${dia}`);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   jogoModal = new bootstrap.Modal(document.getElementById("jogoModal"));
   carregarTimesNoSelect();
@@ -49,6 +55,9 @@ onSnapshot(collection(db, "jogos"), (snap) => {
     id: d.id,
     ...d.data(),
   }));
+
+  // 🔥 ORDENA POR DATA (mais recente em cima)
+  dados.sort((a, b) => dataParaDate(b.data) - dataParaDate(a.data));
 
   lista.innerHTML = dados
     .map(
