@@ -27,7 +27,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function carregarTimesNoSelect() {
   const snap = await getDocs(collection(db, "times"));
-  listaTimes = snap.docs.map((d) => d.data().nome);
 
   const mandante = document.getElementById("jogoMandante");
   const visitante = document.getElementById("jogoVisitante");
@@ -35,9 +34,14 @@ async function carregarTimesNoSelect() {
   mandante.innerHTML = "";
   visitante.innerHTML = "";
 
-  listaTimes.forEach((t) => {
-    mandante.innerHTML += `<option value="${t}">${t}</option>`;
-    visitante.innerHTML += `<option value="${t}">${t}</option>`;
+  snap.forEach((doc) => {
+    const time = doc.data();
+
+    // 🔥 GARANTE QUE TENHA NOME
+    if (!time.nome) return;
+
+    mandante.innerHTML += `<option value="${time.nome}">${time.nome}</option>`;
+    visitante.innerHTML += `<option value="${time.nome}">${time.nome}</option>`;
   });
 }
 

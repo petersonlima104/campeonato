@@ -12,7 +12,7 @@ export async function recalcularClassificacao() {
 
   const times = {};
 
-  // ZERA ESTATÍSTICAS
+  // ZERA
   timesSnap.forEach((t) => {
     times[t.id] = {
       id: t.id,
@@ -28,7 +28,6 @@ export async function recalcularClassificacao() {
     };
   });
 
-  // PROCESSA JOGOS
   jogosSnap.forEach((j) => {
     const jogo = j.data();
     if (!jogo.finalizado) return;
@@ -38,6 +37,7 @@ export async function recalcularClassificacao() {
       (t) => t.nome === jogo.visitante,
     );
 
+    // 🔴 SÓ CONTA SE FOREM DO MESMO GRUPO
     if (!mandante || !visitante) return;
 
     mandante.partidas++;
@@ -65,7 +65,6 @@ export async function recalcularClassificacao() {
     }
   });
 
-  // SALVA NO FIREBASE
   for (const t of Object.values(times)) {
     t.saldo = t.golsMarcados - t.golsSofridos;
 
