@@ -2,23 +2,27 @@ import { db } from "./firebase.js";
 import {
   collection,
   onSnapshot,
-  deleteDoc,
   doc,
-  addDoc,
   updateDoc,
   getDocs,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// ===============================
+// REFERÊNCIAS
+// ===============================
 const lista = document.getElementById("listaAssistencias");
 
-let modalAssistencia = new bootstrap.Modal(
+let jogadoresCache = [];
+
+const modalAssistencia = new bootstrap.Modal(
   document.getElementById("modalAssistencia"),
 );
 
-let assistenciasCache = [];
-
-async function carregarTimesNoSelect(selectId) {
-  const select = document.getElementById(selectId);
+// ===============================
+// CARREGAR TIMES
+// ===============================
+async function carregarTimesNoSelectAssistencia() {
+  const select = document.getElementById("assistenciaTime");
   select.innerHTML = "";
 
   const snap = await getDocs(collection(db, "times"));
@@ -30,117 +34,109 @@ async function carregarTimesNoSelect(selectId) {
   });
 }
 
-onSnapshot(collection(db, "assistencias"), (snap) => {
-  assistenciasCache = snap.docs.map((d) => ({
+// ===============================
+// LISTAGEM + ORDENAÇÃO
+// ===============================
+onSnapshot(collection(db, "jogadores"), (snap) => {
+  jogadoresCache = snap.docs.map((d) => ({
     id: d.id,
     ...d.data(),
   }));
 
-  // ORDENA POR ASSISTÊNCIAS
-  assistenciasCache.sort((a, b) => b.assistencias - a.assistencias);
+  const ordenado = [...jogadoresCache].sort(
+    (a, b) => (b.assistencias || 0) - (a.assistencias || 0),
+  );
 
-  renderAssistencias(assistenciasCache);
+  renderAssistencias(ordenado);
 });
 
-function renderAssistencias(lista) {
-  const tbody = document.getElementById("listaAssistencias");
-
-  tbody.innerHTML = lista
+// ===============================
+// RENDER
+// ===============================
+function renderAssistencias(listaDados) {
+  lista.innerHTML = listaDados
     .map(
-      (a, i) => `
-    <tr>
-      <td>${i + 1}</td>
-      <td>${a.nome}</td>
-      <td>${a.time}</td>
-      <td>${a.assistencias}</td>
-      <td class="admin-only">
-        <button class="btn btn-sm btn-warning" onclick="editarAssistencia('${a.id}')">✏️</button>
-        <button class="btn btn-sm btn-danger" onclick="excluirAssistencia('${a.id}')">🗑️</button>
-      </td>
-    </tr>
-  `,
+      (j, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${j.nome}</td>
+        <td>${j.time}</td>
+        <td>${j.assistencias || 0}</td>
+        <td class="admin-only">
+          <button
+            class="btn btn-sm btn-warning"
+            onclick="editarAssistencia('${j.id}')"
+          >✏️</button>
+        </td>
+      </tr>
+    `,
     )
     .join("");
 
   if (window.isAdmin) atualizarAdminUI(true);
 }
 
+// ===============================
+// FILTRO (IGUAL ARILHEIROS)
+// ===============================
 window.filtrarAssistencias = function () {
   const termo = document
     .getElementById("filtroAssistencia")
     .value.toLowerCase();
 
   if (!termo) {
-    renderAssistencias(assistenciasCache);
+    const ordenado = [...jogadoresCache].sort(
+      (a, b) => (b.assistencias || 0) - (a.assistencias || 0),
+    );
+    renderAssistencias(ordenado);
     return;
   }
 
-  const filtrados = assistenciasCache.filter(
-    (a) =>
-      a.nome.toLowerCase().includes(termo) ||
-      a.time.toLowerCase().includes(termo),
+  const filtrados = jogadoresCache.filter(
+    (j) =>
+      j.nome.toLowerCase().includes(termo) ||
+      j.time.toLowerCase().includes(termo),
   );
 
-  // ORDENA POR ASSISTÊNCIAS
-  assistenciasCache.sort((a, b) => b.assistencias - a.assistencias);
+  filtrados.sort((a, b) => (b.assistencias || 0) - (a.assistencias || 0));
 
   renderAssistencias(filtrados);
 };
 
-window.excluirAssistencia = async function (id) {
-  if (!confirm("Excluir assistência?")) return;
-  await deleteDoc(doc(db, "assistencias", id));
-};
-
+// ===============================
+// EDITAR ASSISTÊNCIA
+// ===============================
 window.editarAssistencia = async function (id) {
-  const linha = document
-    .querySelector(`[onclick="editarAssistencia('${id}')"]`)
-    .closest("tr").children;
+  const jogador = jogadoresCache.find((j) => j.id === id);
+  if (!jogador) return;
 
-  document.getElementById("assistenciaId").value = id;
-  document.getElementById("assistenciaNome").value = linha[1].innerText;
-  document.getElementById("assistenciaQtd").value = linha[3].innerText;
+  await carregarTimesNoSelectAssistencia();
 
-  await carregarTimesNoSelect("assistenciaTime");
-  document.getElementById("assistenciaTime").value = linha[2].innerText;
+  document.getElementById("assistenciaId").value = jogador.id;
+  document.getElementById("assistenciaNome").value = jogador.nome;
+  document.getElementById("assistenciaQtd").value = jogador.assistencias || 0;
+  document.getElementById("assistenciaTime").value = jogador.time;
 
-  new bootstrap.Modal(document.getElementById("modalAssistencia")).show();
+  modalAssistencia.show();
 };
 
-window.novaAssistencia = async function () {
-  document.getElementById("assistenciaId").value = "";
-  document.getElementById("assistenciaNome").value = "";
-  document.getElementById("assistenciaQtd").value = "";
-
-  await carregarTimesNoSelect("assistenciaTime");
-
-  new bootstrap.Modal(document.getElementById("modalAssistencia")).show();
-};
-
+// ===============================
+// SALVAR ASSISTÊNCIA
+// ===============================
 window.salvarAssistencia = async function () {
   const id = document.getElementById("assistenciaId").value;
-
-  const nome = document.getElementById("assistenciaNome").value;
-  const time = document.getElementById("assistenciaTime").value;
   const assistencias = Number(document.getElementById("assistenciaQtd").value);
+  const time = document.getElementById("assistenciaTime").value;
 
-  if (!nome || !time) return alert("Preencha todos os campos");
-
-  if (id) {
-    await updateDoc(doc(db, "assistencias", id), {
-      nome,
-      time,
-      assistencias,
-    });
-  } else {
-    await addDoc(collection(db, "assistencias"), {
-      nome,
-      time,
-      assistencias,
-    });
+  if (assistencias < 0) {
+    alert("Assistências não pode ser negativo");
+    return;
   }
 
-  bootstrap.Modal.getInstance(
-    document.getElementById("modalAssistencia"),
-  ).hide();
+  await updateDoc(doc(db, "jogadores", id), {
+    assistencias,
+    time,
+  });
+
+  modalAssistencia.hide();
 };
