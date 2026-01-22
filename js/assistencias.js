@@ -19,22 +19,6 @@ const modalAssistencia = new bootstrap.Modal(
 );
 
 // ===============================
-// CARREGAR TIMES
-// ===============================
-async function carregarTimesNoSelectAssistencia() {
-  const select = document.getElementById("assistenciaTime");
-  select.innerHTML = "";
-
-  const snap = await getDocs(collection(db, "times"));
-  snap.forEach((doc) => {
-    const opt = document.createElement("option");
-    opt.value = doc.data().nome;
-    opt.textContent = doc.data().nome;
-    select.appendChild(opt);
-  });
-}
-
-// ===============================
 // LISTAGEM + ORDENAÇÃO
 // ===============================
 onSnapshot(collection(db, "jogadores"), (snap) => {
@@ -110,12 +94,12 @@ window.editarAssistencia = async function (id) {
   const jogador = jogadoresCache.find((j) => j.id === id);
   if (!jogador) return;
 
-  await carregarTimesNoSelectAssistencia();
+  //await carregarTimesNoSelectAssistencia();
 
   document.getElementById("assistenciaId").value = jogador.id;
   document.getElementById("assistenciaNome").value = jogador.nome;
   document.getElementById("assistenciaQtd").value = jogador.assistencias || 0;
-  document.getElementById("assistenciaTime").value = jogador.time;
+  //document.getElementById("assistenciaTime").value = jogador.time;
 
   modalAssistencia.show();
 };
@@ -126,7 +110,7 @@ window.editarAssistencia = async function (id) {
 window.salvarAssistencia = async function () {
   const id = document.getElementById("assistenciaId").value;
   const assistencias = Number(document.getElementById("assistenciaQtd").value);
-  const time = document.getElementById("assistenciaTime").value;
+  //const time = document.getElementById("assistenciaTime").value;
 
   if (assistencias < 0) {
     alert("Assistências não pode ser negativo");
@@ -135,7 +119,6 @@ window.salvarAssistencia = async function () {
 
   await updateDoc(doc(db, "jogadores", id), {
     assistencias,
-    time,
   });
 
   modalAssistencia.hide();

@@ -77,7 +77,7 @@ window.filtrarArtilheiros = function () {
 window.novoArtilheiro = async function () {
   document.getElementById("artilheiroId").value = "";
   document.getElementById("artilheiroNome").value = "";
-  document.getElementById("artilheiroGols").value = "";
+  document.getElementById("artilheiroGols").value = 0;
 
   await carregarTimesNoSelect();
   modal.show();
