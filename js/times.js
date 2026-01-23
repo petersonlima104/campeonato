@@ -12,6 +12,31 @@ import { recalcularClassificacao } from "./classificacao.js";
 
 const lista = document.getElementById("listaTimes");
 
+const modalTime = new bootstrap.Modal(document.getElementById("modalTime"));
+
+// ==================
+// CARREGA GRUPOS
+// ==================
+async function carregarGrupos() {
+  const select = document.getElementById("timeGrupo");
+  select.innerHTML = "";
+
+  const snap = await getDocs(collection(db, "grupos"));
+
+  snap.forEach((d) => {
+    select.innerHTML += `<option value="${d.data().nome}">
+      ${d.data().nome}
+    </option>`;
+  });
+}
+
+// ==================
+// MOSTRAR INPUT NOVO GRUPO
+// ==================
+window.mostrarNovoGrupo = function () {
+  document.getElementById("novoGrupo").classList.remove("d-none");
+};
+
 onSnapshot(collection(db, "times"), (snap) => {
   const times = snap.docs.map((d) => ({
     id: d.id,
@@ -120,15 +145,42 @@ window.excluirTime = async function (timeId) {
   }
 };
 
+// ==================
+// NOVO TIME ADICIONAR
+// ==================
 window.novoTime = async function () {
-  const nome = prompt("Nome do time:");
-  const grupo = prompt("Grupo do time (A, B, C...)");
+  document.getElementById("timeNome").value = "";
+  document.getElementById("novoGrupo").value = "";
+  document.getElementById("novoGrupo").classList.add("d-none");
 
-  if (!nome || !grupo) return;
+  await carregarGrupos();
+  modalTime.show();
+};
+
+// ==================
+// SALVAR TIME
+// ==================
+window.salvarTime = async function () {
+  const nome = document.getElementById("timeNome").value.trim();
+  const grupoSelect = document.getElementById("timeGrupo").value;
+  const novoGrupo = document
+    .getElementById("novoGrupo")
+    .value.trim()
+    .toUpperCase();
+
+  if (!nome) return alert("Informe o nome do time");
+
+  let grupoFinal = grupoSelect;
+
+  // 🔥 SE CRIOU NOVO GRUPO
+  if (novoGrupo) {
+    await addDoc(collection(db, "grupos"), { nome: novoGrupo });
+    grupoFinal = novoGrupo;
+  }
 
   await addDoc(collection(db, "times"), {
     nome,
-    grupo: grupo.toUpperCase(),
+    grupo: grupoFinal,
     pontos: 0,
     partidas: 0,
     vitorias: 0,
@@ -138,4 +190,6 @@ window.novoTime = async function () {
     golsSofridos: 0,
     saldo: 0,
   });
+
+  modalTime.hide();
 };

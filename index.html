@@ -330,6 +330,48 @@
       </div>
     </div>
 
+    <!-- MODAL TIME E GRUPO -->
+    <div class="modal fade" id="modalTime">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Cadastrar Time</h5>
+            <button class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            <input
+              id="timeNome"
+              class="form-control mb-2"
+              placeholder="Nome do time"
+            />
+
+            <label class="fw-bold">Grupo</label>
+            <select id="timeGrupo" class="form-select mb-2"></select>
+
+            <button
+              class="btn btn-sm btn-outline-secondary mb-2"
+              onclick="mostrarNovoGrupo()"
+            >
+              ➕ Novo Grupo
+            </button>
+
+            <input
+              id="novoGrupo"
+              class="form-control d-none"
+              placeholder="Ex: A, B, C..."
+            />
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-primary w-100" onclick="salvarTime()">
+              Salvar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- JS -->
     <script type="module" src="js/firebase.js"></script>
     <script type="module" src="js/auth.js"></script>
