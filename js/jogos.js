@@ -86,8 +86,8 @@ window.novoJogo = function () {
   document.getElementById("jogoModalTitulo").innerText = "Adicionar Jogo";
   document.getElementById("jogoId").value = "";
 
-  document.getElementById("jogoData").value = "";
-  document.getElementById("jogoHora").value = "";
+  document.getElementById("jogoData").value = dataHojeBR();
+  document.getElementById("jogoHora").value = "20:00";
   document.getElementById("golsMandante").value = "";
   document.getElementById("golsVisitante").value = "";
 
@@ -148,3 +148,8 @@ window.excluirJogo = async function (id) {
   await deleteDoc(doc(db, "jogos", id));
   await recalcularClassificacao();
 };
+
+function dataHojeBR() {
+  const d = new Date();
+  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+}
