@@ -6,7 +6,10 @@ import {
   doc,
   addDoc,
   updateDoc,
+  getDocs,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+import { recalcularClassificacao } from "./classificacao.js";
 
 const lista = document.getElementById("listaTimes");
 
@@ -52,9 +55,47 @@ onSnapshot(collection(db, "times"), (snap) => {
 
 // ===== FUNÇÕES ADMIN =====
 
-window.excluirTime = async function (id) {
-  if (!confirm("Deseja excluir este time?")) return;
-  await deleteDoc(doc(db, "times", id));
+window.excluirTime = async function (timeId) {
+  if (
+    !confirm(
+      "Ao excluir este time, TODOS os jogos dele também serão excluídos. Deseja continuar?",
+    )
+  ) {
+    return;
+  }
+
+  try {
+    // 🔍 Buscar o time para pegar o nome
+    const timesSnap = await getDocs(collection(db, "times"));
+    const timeDoc = timesSnap.docs.find((d) => d.id === timeId);
+
+    if (!timeDoc) return;
+
+    const nomeTime = timeDoc.data().nome;
+
+    // 🔥 Buscar todos os jogos
+    const jogosSnap = await getDocs(collection(db, "jogos"));
+
+    // 🗑️ Excluir jogos onde o time é mandante ou visitante
+    for (const jogo of jogosSnap.docs) {
+      const dados = jogo.data();
+
+      if (dados.mandante === nomeTime || dados.visitante === nomeTime) {
+        await deleteDoc(doc(db, "jogos", jogo.id));
+      }
+    }
+
+    // 🗑️ Excluir o time
+    await deleteDoc(doc(db, "times", timeId));
+
+    // 🔄 Recalcular classificação
+    await recalcularClassificacao();
+
+    alert("Time e jogos excluídos com sucesso!");
+  } catch (err) {
+    console.error("Erro ao excluir time:", err);
+    alert("Erro ao excluir o time.");
+  }
 };
 
 window.novoTime = async function () {
