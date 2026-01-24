@@ -189,6 +189,39 @@ window.excluirJogo = async function (id) {
   await recalcularClassificacao();
 };
 
+window.excluirTodosJogos = async function () {
+  const confirmar = confirm(
+    "⚠️ ATENÇÃO!\n\nIsso irá EXCLUIR TODOS os jogos e ZERAR gols e assistências.\nEssa ação NÃO pode ser desfeita.\n\nDeseja continuar?",
+  );
+
+  if (!confirmar) return;
+
+  try {
+    // 🗑️ EXCLUIR TODOS OS JOGOS
+    const jogosSnap = await getDocs(collection(db, "jogos"));
+    for (const jogo of jogosSnap.docs) {
+      await deleteDoc(doc(db, "jogos", jogo.id));
+    }
+
+    // 👤 ZERAR GOLS E ASSISTÊNCIAS DOS JOGADORES
+    const jogadoresSnap = await getDocs(collection(db, "jogadores"));
+    for (const jog of jogadoresSnap.docs) {
+      await updateDoc(doc(db, "jogadores", jog.id), {
+        gols: 0,
+        assistencias: 0,
+      });
+    }
+
+    // 🔄 RECLASSIFICA TIMES
+    await recalcularClassificacao();
+
+    alert("✅ Campeonato resetado com sucesso!");
+  } catch (err) {
+    console.error("Erro ao resetar campeonato:", err);
+    alert("❌ Erro ao resetar o campeonato.");
+  }
+};
+
 function dataHojeBR() {
   const d = new Date();
   return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
