@@ -190,6 +190,7 @@
                 <th>Mandante</th>
                 <th>Visitante</th>
                 <th>Placar</th>
+                <th>Status</th>
                 <th class="admin-only">Ações</th>
               </tr>
             </thead>
@@ -242,6 +243,15 @@
             <div class="mb-2">
               <label>Gols Visitante</label>
               <input id="golsVisitante" type="number" class="form-control" />
+            </div>
+
+            <div class="mb-2">
+              <label>Status do Jogo</label>
+              <select id="jogoStatus" class="form-select">
+                <option value="embreve">Em breve</option>
+                <option value="andamento">Em andamento</option>
+                <option value="finalizado">Finalizado</option>
+              </select>
             </div>
           </div>
 
