@@ -30,7 +30,7 @@ export async function recalcularClassificacao() {
 
   jogosSnap.forEach((j) => {
     const jogo = j.data();
-    if (!jogo.finalizado) return;
+    if (jogo.status === "embreve") return;
 
     const mandante = Object.values(times).find((t) => t.nome === jogo.mandante);
     const visitante = Object.values(times).find(

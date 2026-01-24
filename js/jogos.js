@@ -60,8 +60,15 @@ onSnapshot(collection(db, "jogos"), (snap) => {
     ...d.data(),
   }));
 
-  // 🔥 ORDENA POR DATA (mais recente em cima)
-  dados.sort((a, b) => dataParaDate(b.data) - dataParaDate(a.data));
+  // ORDENAR OS JOGOS PELA DATA E EM ANDAMENTO NO TOPO
+  dados.sort((a, b) => {
+    // 1️⃣ Jogos em andamento sempre no topo
+    if (a.status === "andamento" && b.status !== "andamento") return -1;
+    if (a.status !== "andamento" && b.status === "andamento") return 1;
+
+    // 2️⃣ Dentro do mesmo grupo, ordenar por data (mais antigo → mais novo)
+    return dataParaDate(a.data) - dataParaDate(b.data);
+  });
 
   lista.innerHTML = dados
     .map(
@@ -72,6 +79,24 @@ onSnapshot(collection(db, "jogos"), (snap) => {
       <td>${j.mandante}</td>
       <td>${j.visitante}</td>
       <td>${j.golsMandante} x ${j.golsVisitante}</td>
+      <td>
+        <span class="fw-semibold ${
+          j.status === "finalizado"
+            ? "text-success"
+            : j.status === "andamento"
+              ? "text-primary"
+              : "text-secondary"
+        }">
+        ${
+          j.status === "finalizado"
+            ? "Finalizado"
+            : j.status === "andamento"
+              ? "Em andamento"
+              : "Em breve"
+        }
+        </span>
+      </td>
+
       <td class="admin-only">
         <button class="btn btn-sm btn-warning me-1" onclick="editarJogo('${j.id}')">✏️</button>
         <button class="btn btn-sm btn-danger" onclick="excluirJogo('${j.id}')">🗑️</button>
@@ -94,6 +119,7 @@ window.novoJogo = function () {
   document.getElementById("jogoHora").value = "20:00";
   document.getElementById("golsMandante").value = "";
   document.getElementById("golsVisitante").value = "";
+  document.getElementById("jogoStatus").value = "embreve";
 
   jogoModal.show();
 };
@@ -107,6 +133,7 @@ window.salvarJogo = async function () {
   const visitante = document.getElementById("jogoVisitante").value;
   const golsMandante = Number(document.getElementById("golsMandante").value);
   const golsVisitante = Number(document.getElementById("golsVisitante").value);
+  const status = document.getElementById("jogoStatus").value;
 
   if (mandante === visitante) {
     alert("Mandante e visitante não podem ser iguais");
@@ -120,7 +147,7 @@ window.salvarJogo = async function () {
     visitante,
     golsMandante,
     golsVisitante,
-    finalizado: true,
+    status,
   };
 
   if (id) {
@@ -134,16 +161,25 @@ window.salvarJogo = async function () {
 };
 
 window.editarJogo = async function (id) {
-  const golsMandante = Number(prompt("Gols do mandante:"));
-  const golsVisitante = Number(prompt("Gols do visitante:"));
+  const snap = await getDocs(collection(db, "jogos"));
+  const jogo = snap.docs.find((d) => d.id === id);
 
-  await updateDoc(doc(db, "jogos", id), {
-    golsMandante,
-    golsVisitante,
-    finalizado: true,
-  });
+  if (!jogo) return;
 
-  await recalcularClassificacao();
+  const dados = jogo.data();
+
+  document.getElementById("jogoModalTitulo").innerText = "Editar Jogo";
+  document.getElementById("jogoId").value = id;
+
+  document.getElementById("jogoData").value = dados.data;
+  document.getElementById("jogoHora").value = dados.hora;
+  document.getElementById("jogoMandante").value = dados.mandante;
+  document.getElementById("jogoVisitante").value = dados.visitante;
+  document.getElementById("golsMandante").value = dados.golsMandante;
+  document.getElementById("golsVisitante").value = dados.golsVisitante;
+  document.getElementById("jogoStatus").value = dados.status;
+
+  jogoModal.show();
 };
 
 window.excluirJogo = async function (id) {
