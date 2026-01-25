@@ -57,50 +57,65 @@ onSnapshot(collection(db, "jogos"), (snap) => {
     ...d.data(),
   }));
 
-  // ORDENAR OS JOGOS PELA DATA E EM ANDAMENTO NO TOPO
+  // 🔥 MANTÉM A LÓGICA ORIGINAL
   dados.sort((a, b) => {
     // Jogos em andamento sempre no topo
     if (a.status === "andamento" && b.status !== "andamento") return -1;
     if (a.status !== "andamento" && b.status === "andamento") return 1;
 
-    // Dentro do mesmo grupo, ordenar por data (mais antigo → mais novo)
+    // Dentro do mesmo grupo, ordenar por data
     return dataParaDate(a.data) - dataParaDate(b.data);
   });
 
-  lista.innerHTML = dados
-    .map(
-      (j) => `
-    <tr>
-      <td>${j.data}</td>
-      <td>${j.hora}</td>
-      <td>${j.mandante}</td>
-      <td>${j.visitante}</td>
-      <td>${j.golsMandante} x ${j.golsVisitante}</td>
-      <td>
-        <span class="fw-semibold ${
-          j.status === "finalizado"
-            ? "text-success"
-            : j.status === "andamento"
-              ? "text-primary"
-              : "text-secondary"
-        }">
-        ${
-          j.status === "finalizado"
-            ? "Finalizado"
-            : j.status === "andamento"
-              ? "Em andamento"
-              : "Em breve"
-        }
-        </span>
-      </td>
-      <td class="admin-only">
-        <button class="btn btn-sm btn-warning me-1" onclick="editarJogo('${j.id}')">✏️</button>
-        <button class="btn btn-sm btn-danger" onclick="excluirJogo('${j.id}')">🗑️</button>
-      </td>
-    </tr>
-  `,
-    )
-    .join("");
+  let html = "";
+  let turnoAtual = "";
+
+  dados.forEach((j) => {
+    // 🔹 Cabeçalho visual do turno
+    if (j.turno && j.turno !== turnoAtual) {
+      turnoAtual = j.turno;
+      html += `
+        <tr class="table-dark">
+          <td colspan="7" class="text-center fw-bold">
+            ${turnoAtual}
+          </td>
+        </tr>
+      `;
+    }
+
+    html += `
+      <tr>
+        <td>${j.data}</td>
+        <td>${j.hora}</td>
+        <td>${j.mandante}</td>
+        <td>${j.visitante}</td>
+        <td>${j.golsMandante} x ${j.golsVisitante}</td>
+        <td>
+          <span class="fw-semibold ${
+            j.status === "finalizado"
+              ? "text-success"
+              : j.status === "andamento"
+                ? "text-primary"
+                : "text-secondary"
+          }">
+            ${
+              j.status === "finalizado"
+                ? "Finalizado"
+                : j.status === "andamento"
+                  ? "Em andamento"
+                  : "Em breve"
+            }
+          </span>
+        </td>
+        <td class="admin-only">
+          <button class="btn btn-sm btn-warning me-1" onclick="editarJogo('${j.id}')">✏️</button>
+          <button class="btn btn-sm btn-danger" onclick="excluirJogo('${j.id}')">🗑️</button>
+        </td>
+      </tr>
+    `;
+  });
+
+  lista.innerHTML = html;
 
   if (window.isAdmin) atualizarAdminUI(true);
 });
@@ -359,8 +374,11 @@ function gerarJogosComDatas(tabela) {
   let jogos = [];
   let dataBase = proximoSabado(new Date());
 
+  const metade = tabela.length / 2;
+
   for (let r = 0; r < tabela.length; r++) {
     const rodada = tabela[r];
+    const turno = r < metade ? "1º Turno" : "2º Turno";
 
     for (let i = 0; i < rodada.length; i++) {
       const jogo = rodada[i];
@@ -378,6 +396,7 @@ function gerarJogosComDatas(tabela) {
         golsMandante: 0,
         golsVisitante: 0,
         status: "embreve",
+        turno,
       });
     }
 
