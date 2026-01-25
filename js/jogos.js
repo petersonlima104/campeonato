@@ -178,34 +178,49 @@ window.editarJogo = async function (id) {
   jogoModal.show();
 };
 
-window.excluirJogo = async function (id) {
-  if (!confirm("Excluir jogo?")) return;
-
-  await deleteDoc(doc(db, "jogos", id));
-  await recalcularClassificacao();
-};
-
 window.excluirTodosJogos = async function () {
   const confirmar = confirm(
     "⚠️ ATENÇÃO!\n\nIsso irá EXCLUIR TODOS os jogos e ZERAR gols e assistências.\nEssa ação NÃO pode ser desfeita.\n\nDeseja continuar?",
   );
-
   if (!confirmar) return;
 
   try {
+    let batch = writeBatch(db);
+    let operacoes = 0; // contagem de operações no batch
+
     // 🗑️ EXCLUIR TODOS OS JOGOS
     const jogosSnap = await getDocs(collection(db, "jogos"));
     for (const jogo of jogosSnap.docs) {
-      await deleteDoc(doc(db, "jogos", jogo.id));
+      batch.delete(doc(db, "jogos", jogo.id));
+      operacoes++;
+
+      // ⚠️ Commit a cada 500 operações (limite do Firestore)
+      if (operacoes === 500) {
+        await batch.commit();
+        batch = writeBatch(db);
+        operacoes = 0;
+      }
     }
 
     // 👤 ZERAR GOLS E ASSISTÊNCIAS DOS JOGADORES
     const jogadoresSnap = await getDocs(collection(db, "jogadores"));
     for (const jog of jogadoresSnap.docs) {
-      await updateDoc(doc(db, "jogadores", jog.id), {
+      batch.update(doc(db, "jogadores", jog.id), {
         gols: 0,
         assistencias: 0,
       });
+      operacoes++;
+
+      if (operacoes === 500) {
+        await batch.commit();
+        batch = writeBatch(db);
+        operacoes = 0;
+      }
+    }
+
+    // Commit final se sobrar alguma operação
+    if (operacoes > 0) {
+      await batch.commit();
     }
 
     // 🔄 RECLASSIFICA TIMES
