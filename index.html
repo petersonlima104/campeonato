@@ -190,10 +190,10 @@
           </button>
 
           <button
-            class="btn btn-primary mb-2 admin-only"
-            onclick="gerarJogosAutomaticos()"
+            class="btn btn-warning mb-2 admin-only"
+            onclick="abrirModalGeracaoJogos()"
           >
-            ⚽ Gerar jogos automáticos
+            ⚽ Gerar Jogos Automáticos
           </button>
 
           <table class="table table-striped">
@@ -389,6 +389,54 @@
           <div class="modal-footer">
             <button class="btn btn-primary w-100" onclick="salvarTime()">
               Salvar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL GERAR JOGO AUTOMATICO -->
+    <div
+      class="modal fade"
+      id="modalFormatoCampeonato"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Gerar jogos automaticamente</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+
+          <div class="modal-body">
+            <p>Escolha o formato do campeonato:</p>
+
+            <ul>
+              <li><strong>Turno único</strong>: todos contra todos uma vez</li>
+              <li><strong>Turno e returno</strong>: ida e volta</li>
+            </ul>
+
+            <div class="alert alert-warning mb-0">
+              ⚠️ Todos os jogos existentes serão excluídos.
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">
+              Cancelar
+            </button>
+
+            <button class="btn btn-primary" onclick="confirmarGeracao(false)">
+              Turno único
+            </button>
+
+            <button class="btn btn-success" onclick="confirmarGeracao(true)">
+              Turno + Returno
             </button>
           </div>
         </div>

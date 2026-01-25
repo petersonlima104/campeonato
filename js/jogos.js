@@ -242,125 +242,181 @@ window.excluirTodosJogos = async function () {
   }
 };
 
-window.gerarJogosAutomaticos = async function () {
-  if (
-    !confirm(
-      "Isso irá APAGAR os jogos existentes e gerar novos automaticamente por GRUPO. Continuar?",
-    )
-  ) {
-    return;
-  }
+window.confirmarGeracao = async function (gerarReturno) {
+  const modalEl = document.getElementById("modalFormatoCampeonato");
+  const modal = bootstrap.Modal.getInstance(modalEl);
+  modal.hide();
 
+  await gerarJogosAutomaticos(gerarReturno);
+};
+
+window.gerarJogosAutomaticos = async function (gerarReturno) {
   try {
-    const batch = writeBatch(db);
+    let batch = writeBatch(db);
+    let operacoes = 0;
 
-    // 🗑️ APAGA TODOS OS JOGOS
+    // 🗑️ APAGAR TODOS OS JOGOS
     const jogosSnap = await getDocs(collection(db, "jogos"));
-    jogosSnap.forEach((docSnap) => {
+    for (const docSnap of jogosSnap.docs) {
       batch.delete(doc(db, "jogos", docSnap.id));
-    });
+      operacoes++;
 
-    // 📥 BUSCA TIMES
+      if (operacoes === 500) {
+        await batch.commit();
+        batch = writeBatch(db);
+        operacoes = 0;
+      }
+    }
+
+    // 📥 BUSCAR TIMES
     const timesSnap = await getDocs(collection(db, "times"));
     const times = timesSnap.docs.map((d) => d.data());
 
-    // 🧩 AGRUPA TIMES POR GRUPO
+    // 🧩 AGRUPAR TIMES POR GRUPO
     const grupos = {};
-    times.forEach((time) => {
-      if (!grupos[time.grupo]) grupos[time.grupo] = [];
-      grupos[time.grupo].push(time);
+    times.forEach((t) => {
+      if (!grupos[t.grupo]) grupos[t.grupo] = [];
+      grupos[t.grupo].push(t);
     });
 
-    // 📅 DATA BASE
-    let dataBase = proximoSabado();
+    let dataBase = proximoSabado(new Date());
 
-    // ⚽ GERA JOGOS PARA CADA GRUPO
-    Object.keys(grupos).forEach((grupo) => {
+    // 🔁 GERAR JOGOS POR GRUPO (SEM MISTURAR)
+    for (const grupo in grupos) {
       const timesGrupo = grupos[grupo];
+      if (timesGrupo.length < 2) continue;
 
-      if (timesGrupo.length < 2) return;
+      // 🧠 GERA TABELA (TURNO OU TURNO + RETURNO)
+      const tabela = gerarTabelaGrupo(timesGrupo, gerarReturno);
 
-      // TURNO
-      criarRodadasGrupo(timesGrupo, grupo, batch, dataBase, false);
+      // 📅 GERA JOGOS COM DATAS
+      const jogos = montarJogosComDatas(tabela, grupo, dataBase);
 
-      // RETURNO (espelhado e distante)
-      const semanas = timesGrupo.length - 1;
-      const dataReturno = adicionarDias(dataBase, semanas * 7);
-      criarRodadasGrupo(timesGrupo, grupo, batch, dataReturno, true);
+      for (const jogo of jogos) {
+        batch.set(doc(collection(db, "jogos")), jogo);
+        operacoes++;
 
-      // Empurra a próxima data base para evitar sobreposição entre grupos
-      dataBase = adicionarDias(dataBase, semanas * 14);
-    });
+        if (operacoes === 500) {
+          await batch.commit();
+          batch = writeBatch(db);
+          operacoes = 0;
+        }
+      }
 
-    await batch.commit();
+      // ⏭️ AVANÇA O CALENDÁRIO APÓS O GRUPO
+      dataBase.setDate(dataBase.getDate() + tabela.length * 7);
+    }
 
-    alert("✅ Jogos gerados corretamente por grupo!");
+    if (operacoes > 0) {
+      await batch.commit();
+    }
+
+    alert(
+      gerarReturno
+        ? "✅ Jogos de TURNO + RETURNO gerados com sucesso!"
+        : "✅ Jogos de TURNO ÚNICO gerados com sucesso!",
+    );
   } catch (err) {
     console.error(err);
-    alert("❌ Erro ao gerar jogos.");
+    alert("❌ Erro ao gerar jogos automáticos.");
   }
 };
 
-// =========================
-// FUNÇÃO INTERNA
-// =========================
-function criarRodadasGrupo(times, grupo, batch, dataInicial, isReturno) {
-  const total = times.length;
-  const rodadas = total - 1;
-  const metade = total / 2;
-
+function gerarTabelaGrupo(times, gerarReturno) {
   let lista = [...times];
 
+  // Se ímpar, adiciona folga
+  if (lista.length % 2 !== 0) {
+    lista.push({ nome: "FOLGA" });
+  }
+
+  const total = lista.length;
+  const rodadas = total - 1;
+  const jogosPorRodada = total / 2;
+
+  let rodadaTimes = [...lista];
+  let turno = [];
+
   for (let r = 0; r < rodadas; r++) {
-    const sabado = adicionarDias(dataInicial, r * 7);
-    const domingo = adicionarDias(sabado, 1);
+    let jogosRodada = [];
 
-    for (let i = 0; i < metade; i++) {
-      const timeA = lista[i];
-      const timeB = lista[total - 1 - i];
+    for (let i = 0; i < jogosPorRodada; i++) {
+      const mandante = rodadaTimes[i];
+      const visitante = rodadaTimes[total - 1 - i];
 
-      const mandante = isReturno ? timeB : timeA;
-      const visitante = isReturno ? timeA : timeB;
+      if (mandante.nome !== "FOLGA" && visitante.nome !== "FOLGA") {
+        jogosRodada.push({
+          mandante,
+          visitante,
+        });
+      }
+    }
 
-      const dataJogo = i % 2 === 0 ? sabado : domingo;
+    turno.push(jogosRodada);
 
-      batch.set(doc(collection(db, "jogos")), {
-        data: formatarData(dataJogo),
+    // Rotação estilo Brasileirão
+    rodadaTimes = [rodadaTimes[0], ...rodadaTimes.slice(2), rodadaTimes[1]];
+  }
+
+  // 🔁 RETURNO ESPELHADO
+  if (!gerarReturno) return turno;
+
+  const returno = turno.map((rodada) =>
+    rodada.map((j) => ({
+      mandante: j.visitante,
+      visitante: j.mandante,
+    })),
+  );
+
+  return [...turno, ...returno];
+}
+
+window.abrirModalGeracaoJogos = function () {
+  const modal = new bootstrap.Modal(
+    document.getElementById("modalFormatoCampeonato"),
+  );
+  modal.show();
+};
+
+function proximoSabado(data) {
+  const d = new Date(data);
+  const dia = d.getDay(); // 0=Domingo
+  const diff = (6 - dia + 7) % 7;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+function montarJogosComDatas(tabela, grupo, dataInicial) {
+  let jogos = [];
+  let dataBase = new Date(dataInicial);
+
+  tabela.forEach((rodada, indexRodada) => {
+    rodada.forEach((jogo, i) => {
+      const dataJogo = new Date(dataBase);
+
+      // Alterna sábado / domingo
+      if (i % 2 !== 0) {
+        dataJogo.setDate(dataJogo.getDate() + 1);
+      }
+
+      jogos.push({
+        data: dataJogo.toLocaleDateString("pt-BR"),
         hora: "20:00",
-        mandante: mandante.nome,
-        visitante: visitante.nome,
+        mandante: jogo.mandante.nome,
+        visitante: jogo.visitante.nome,
         golsMandante: 0,
         golsVisitante: 0,
         status: "embreve",
         grupo: grupo,
+        rodada: indexRodada + 1,
       });
-    }
+    });
 
-    // 🔄 ROTAÇÃO TIPO BRASILEIRÃO
-    lista = [
-      lista[0],
-      lista[lista.length - 1],
-      ...lista.slice(1, lista.length - 1),
-    ];
-  }
-}
+    // Próxima rodada = +7 dias
+    dataBase.setDate(dataBase.getDate() + 7);
+  });
 
-function proximoSabado() {
-  const hoje = new Date();
-  const dia = hoje.getDay();
-  const diff = (6 - dia + 7) % 7 || 7;
-  hoje.setDate(hoje.getDate() + diff);
-  return hoje;
-}
-
-function adicionarDias(data, dias) {
-  const nova = new Date(data);
-  nova.setDate(nova.getDate() + dias);
-  return nova;
-}
-
-function formatarData(data) {
-  return data.toLocaleDateString("pt-BR");
+  return jogos;
 }
 
 function dataHojeBR() {
