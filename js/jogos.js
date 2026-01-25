@@ -242,6 +242,127 @@ window.excluirTodosJogos = async function () {
   }
 };
 
+window.gerarJogosAutomaticos = async function () {
+  if (
+    !confirm(
+      "Isso irá APAGAR os jogos existentes e gerar novos automaticamente por GRUPO. Continuar?",
+    )
+  ) {
+    return;
+  }
+
+  try {
+    const batch = writeBatch(db);
+
+    // 🗑️ APAGA TODOS OS JOGOS
+    const jogosSnap = await getDocs(collection(db, "jogos"));
+    jogosSnap.forEach((docSnap) => {
+      batch.delete(doc(db, "jogos", docSnap.id));
+    });
+
+    // 📥 BUSCA TIMES
+    const timesSnap = await getDocs(collection(db, "times"));
+    const times = timesSnap.docs.map((d) => d.data());
+
+    // 🧩 AGRUPA TIMES POR GRUPO
+    const grupos = {};
+    times.forEach((time) => {
+      if (!grupos[time.grupo]) grupos[time.grupo] = [];
+      grupos[time.grupo].push(time);
+    });
+
+    // 📅 DATA BASE
+    let dataBase = proximoSabado();
+
+    // ⚽ GERA JOGOS PARA CADA GRUPO
+    Object.keys(grupos).forEach((grupo) => {
+      const timesGrupo = grupos[grupo];
+
+      if (timesGrupo.length < 2) return;
+
+      // TURNO
+      criarRodadasGrupo(timesGrupo, grupo, batch, dataBase, false);
+
+      // RETURNO (espelhado e distante)
+      const semanas = timesGrupo.length - 1;
+      const dataReturno = adicionarDias(dataBase, semanas * 7);
+      criarRodadasGrupo(timesGrupo, grupo, batch, dataReturno, true);
+
+      // Empurra a próxima data base para evitar sobreposição entre grupos
+      dataBase = adicionarDias(dataBase, semanas * 14);
+    });
+
+    await batch.commit();
+
+    alert("✅ Jogos gerados corretamente por grupo!");
+  } catch (err) {
+    console.error(err);
+    alert("❌ Erro ao gerar jogos.");
+  }
+};
+
+// =========================
+// FUNÇÃO INTERNA
+// =========================
+function criarRodadasGrupo(times, grupo, batch, dataInicial, isReturno) {
+  const total = times.length;
+  const rodadas = total - 1;
+  const metade = total / 2;
+
+  let lista = [...times];
+
+  for (let r = 0; r < rodadas; r++) {
+    const sabado = adicionarDias(dataInicial, r * 7);
+    const domingo = adicionarDias(sabado, 1);
+
+    for (let i = 0; i < metade; i++) {
+      const timeA = lista[i];
+      const timeB = lista[total - 1 - i];
+
+      const mandante = isReturno ? timeB : timeA;
+      const visitante = isReturno ? timeA : timeB;
+
+      const dataJogo = i % 2 === 0 ? sabado : domingo;
+
+      batch.set(doc(collection(db, "jogos")), {
+        data: formatarData(dataJogo),
+        hora: "20:00",
+        mandante: mandante.nome,
+        visitante: visitante.nome,
+        golsMandante: 0,
+        golsVisitante: 0,
+        status: "embreve",
+        grupo: grupo,
+      });
+    }
+
+    // 🔄 ROTAÇÃO TIPO BRASILEIRÃO
+    lista = [
+      lista[0],
+      lista[lista.length - 1],
+      ...lista.slice(1, lista.length - 1),
+    ];
+  }
+}
+
+function proximoSabado() {
+  const hoje = new Date();
+  const dia = hoje.getDay();
+  const diff = (6 - dia + 7) % 7 || 7;
+  hoje.setDate(hoje.getDate() + diff);
+  return hoje;
+}
+
+function adicionarDias(data, dias) {
+  const nova = new Date(data);
+  nova.setDate(nova.getDate() + dias);
+  return nova;
+}
+
+function formatarData(data) {
+  return data.toLocaleDateString("pt-BR");
+}
+
 function dataHojeBR() {
   const d = new Date();
   return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
