@@ -7,6 +7,7 @@ import {
   doc,
   updateDoc,
   getDocs,
+  writeBatch,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import { recalcularClassificacao } from "./classificacao.js";
@@ -216,6 +217,172 @@ window.excluirTodosJogos = async function () {
     alert("❌ Erro ao resetar o campeonato.");
   }
 };
+
+window.gerarJogosAutomaticos = async function () {
+  const confirmar = confirm(
+    "⚠️ Isso irá APAGAR todos os jogos existentes e criar novos jogos automaticamente.\nEssa ação não pode ser desfeita.\n\nDeseja continuar?",
+  );
+  if (!confirmar) return;
+
+  try {
+    // 🔹 Criar batch
+    let batch = writeBatch(db);
+    let operacoes = 0;
+
+    // 1️⃣ Excluir jogos
+    const jogosSnap = await getDocs(collection(db, "jogos"));
+    for (const jogo of jogosSnap.docs) {
+      batch.delete(doc(db, "jogos", jogo.id));
+      operacoes++;
+
+      if (operacoes === 500) {
+        await batch.commit();
+        batch = writeBatch(db);
+        operacoes = 0;
+      }
+    }
+
+    // 2️⃣ Zerar jogadores (gols e assistências)
+    const jogadoresSnap = await getDocs(collection(db, "jogadores"));
+    for (const jogador of jogadoresSnap.docs) {
+      batch.update(doc(db, "jogadores", jogador.id), {
+        gols: 0,
+        assistencias: 0,
+      });
+      operacoes++;
+
+      if (operacoes === 500) {
+        await batch.commit();
+        batch = writeBatch(db);
+        operacoes = 0;
+      }
+    }
+
+    // 3️⃣ Buscar times
+    const timesSnap = await getDocs(collection(db, "times"));
+    const times = timesSnap.docs.map((d) => ({
+      id: d.id,
+      nome: d.data().nome,
+    }));
+
+    if (times.length < 2) {
+      alert("❌ É necessário pelo menos 2 times.");
+      return;
+    }
+
+    // 4️⃣ Gerar jogos (retorna array)
+    const jogosGerados = gerarTabelaBrasileirao(times);
+
+    // 5️⃣ Salvar jogos no batch
+    for (const jogo of jogosGerados) {
+      const ref = doc(collection(db, "jogos"));
+      batch.set(ref, jogo);
+      operacoes++;
+
+      if (operacoes === 500) {
+        await batch.commit();
+        batch = writeBatch(db);
+        operacoes = 0;
+      }
+    }
+
+    // Commit final
+    if (operacoes > 0) {
+      await batch.commit();
+    }
+
+    alert("✅ Jogos automáticos criados com sucesso!");
+  } catch (err) {
+    console.error(err);
+    alert("❌ Erro ao gerar jogos automáticos.");
+  }
+};
+
+function gerarTabelaBrasileirao(times) {
+  let lista = [...times];
+
+  if (lista.length % 2 !== 0) {
+    lista.push({ id: null, nome: "FOLGA" });
+  }
+
+  const totalTimes = lista.length;
+  const rodadas = totalTimes - 1;
+  const jogosPorRodada = totalTimes / 2;
+
+  let rodadaTimes = [...lista];
+  let turno = [];
+
+  for (let r = 0; r < rodadas; r++) {
+    let jogosRodada = [];
+
+    for (let i = 0; i < jogosPorRodada; i++) {
+      const casa = rodadaTimes[i];
+      const fora = rodadaTimes[totalTimes - 1 - i];
+
+      if (casa.id && fora.id) {
+        jogosRodada.push({ casa, fora });
+      }
+    }
+
+    turno.push(jogosRodada);
+
+    rodadaTimes = [rodadaTimes[0], ...rodadaTimes.slice(2), rodadaTimes[1]];
+  }
+
+  // Returno espelhado
+  const returno = turno.map((rodada) =>
+    rodada.map((j) => ({
+      casa: j.fora,
+      fora: j.casa,
+    })),
+  );
+
+  return gerarJogosComDatas([...turno, ...returno]);
+}
+
+function gerarJogosComDatas(tabela) {
+  let jogos = [];
+  let dataBase = proximoSabado(new Date());
+
+  for (let r = 0; r < tabela.length; r++) {
+    const rodada = tabela[r];
+
+    for (let i = 0; i < rodada.length; i++) {
+      const jogo = rodada[i];
+      let dataJogo = new Date(dataBase);
+
+      if (i % 2 !== 0) {
+        dataJogo.setDate(dataJogo.getDate() + 1); // domingo
+      }
+
+      jogos.push({
+        data: formatarData(dataJogo),
+        hora: "20:00", // hora padrão
+        mandante: jogo.casa.nome,
+        visitante: jogo.fora.nome,
+        golsMandante: 0,
+        golsVisitante: 0,
+        status: "embreve",
+      });
+    }
+
+    dataBase.setDate(dataBase.getDate() + 7);
+  }
+
+  return jogos;
+}
+
+function proximoSabado(data) {
+  const d = new Date(data);
+  const dia = d.getDay();
+  const diff = (6 - dia + 7) % 7;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+function formatarData(data) {
+  return data.toLocaleDateString("pt-BR");
+}
 
 function dataHojeBR() {
   const d = new Date();
